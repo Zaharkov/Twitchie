@@ -6,19 +6,15 @@
         public string Username { get; internal set; }
         public string Channel { get; internal set; }
 
-        public ModeEventArgs(string IrcMessage)
+        public ModeEventArgs(string ircMessage)
         {
-            string[] SplittedMessage = IrcMessage.Split(' ');
+            var splittedMessage = ircMessage.Split(' ');
 
-            if (SplittedMessage[2].StartsWith("#"))
-                Channel = SplittedMessage[2];
+            if (splittedMessage[2].StartsWith("#"))
+                Channel = splittedMessage[2].TrimStart('#');
 
-            if (SplittedMessage[3].Equals("+o"))
-                AddingMode = true;
-            else
-                AddingMode = false;
-
-            Username = SplittedMessage[4];
+            AddingMode = splittedMessage[3].Equals("+o");
+            Username = splittedMessage[4];
         }
     }
 }

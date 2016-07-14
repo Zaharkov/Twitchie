@@ -2,33 +2,33 @@
 {
     public class RoomStateEventArgs
     {
-        public bool r9k { get; internal set; }
+        public bool R9K { get; internal set; }
         public bool SubOnly { get; internal set; }
         public bool SlowMode { get; internal set; }
         public string BroadcasterLanguage { get; internal set; }
         public string Channel { get; internal set; }
 
-        public RoomStateEventArgs(string IrcMessage)
+        public RoomStateEventArgs(string ircMessage)
         {
-            if (IrcMessage.Split(';').Length > 3)
+            if (ircMessage.Split(';').Length > 3)
             {
-                if (IrcMessage.Split(';')[0].Split('=').Length > 1)
-                    BroadcasterLanguage = IrcMessage.Split(';')[0].Split('=')[1];
+                if (ircMessage.Split(';')[0].Split('=').Length > 1)
+                    BroadcasterLanguage = ircMessage.Split(';')[0].Split('=')[1];
 
-                if (IrcMessage.Split(';')[1].Split('=').Length > 1)
-                    r9k = ToBoolean(IrcMessage.Split(';')[1].Split('=')[1]);
+                if (ircMessage.Split(';')[1].Split('=').Length > 1)
+                    R9K = ToBoolean(ircMessage.Split(';')[1].Split('=')[1]);
 
-                if (IrcMessage.Split(';')[2].Split('=').Length > 1)
-                    SlowMode = ToBoolean(IrcMessage.Split(';')[2].Split('=')[1]);
+                if (ircMessage.Split(';')[2].Split('=').Length > 1)
+                    SlowMode = ToBoolean(ircMessage.Split(';')[2].Split('=')[1]);
 
-                if (IrcMessage.Split(';')[3].Split('=').Length > 1)
-                    SubOnly = ToBoolean(IrcMessage.Split(';')[3].Split('=')[1]);
+                if (ircMessage.Split(';')[3].Split('=').Length > 1)
+                    SubOnly = ToBoolean(ircMessage.Split(';')[3].Split('=')[1]);
 
-                Channel = "#" + IrcMessage.Split('#')[1];
+                Channel = ircMessage.Split('#')[1];
             }
         }
 
-        private bool ToBoolean(string str)
+        private static bool ToBoolean(string str)
             => str == "1";
     }
 }

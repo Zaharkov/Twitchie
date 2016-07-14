@@ -6,16 +6,16 @@
         public string Channel { get; internal set; }
         public string TimeoutUsername { get; internal set; }
 
-        public ClearChatEventArgs(string IrcMessage)
+        public ClearChatEventArgs(string ircMessage)
         {
-            string[] SplittedMsg = IrcMessage.Split(' ');
+            var splittedMsg = ircMessage.Split(' ');
 
-            Channel = SplittedMsg[2];
+            Channel = splittedMsg[2].TrimStart('#');
 
-            if (SplittedMsg.Length > 3)
+            if (splittedMsg.Length > 3)
             {
                 IsTimeout = true;
-                TimeoutUsername = SplittedMsg[3].Replace(":", "");
+                TimeoutUsername = splittedMsg[3].Replace(":", "");
             }
             else
             {

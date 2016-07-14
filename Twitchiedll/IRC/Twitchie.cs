@@ -1,95 +1,116 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using Twitchiedll.IRC.Events;
 
 namespace Twitchiedll.IRC
 {
-    public partial class Twitchie
+    public partial class Twitchie : IDisposable
     {
-        private string Nickname, Buffer;
-        private string[] Channels;
+        private string _buffer;
+        private readonly List<string> _channels = new List<string>();
 
-        private TextReader Input;
-        private TextWriter Output;
-        private MessageHandler MessageHandler;
+        private TextReader _textReader;
+        private TextWriter _textWriter;
+        private MessageHandler _messageHandler;
 
-        private TcpClient ClientSocket = new TcpClient();
-        private NamesEventArgs NamesEventArgs = new NamesEventArgs();
+        private readonly TcpClient _clientSocket = new TcpClient();
+        private readonly NamesEventArgs _namesEventArgs = new NamesEventArgs();
 
-        public bool IsConnected => ClientSocket.Connected;
-
-        public void Connect(string Server, int Port)
+        public void Connect(string server, int port)
         {
-            try
-            {
-                ClientSocket.Connect(Server, Port);
+            _clientSocket.Connect(server, port);
 
-                Input = new StreamReader(ClientSocket.GetStream());
-                Output = new StreamWriter(ClientSocket.GetStream());
-                MessageHandler = new MessageHandler(Output);
-            }
-            catch { }
+            if (!_clientSocket.Connected)
+                throw new Exception("Connection failed");
+
+            var stream = _clientSocket.GetStream();
+
+            _textReader = new StreamReader(stream);
+            _textWriter = new StreamWriter(stream);
+            _messageHandler = new MessageHandler(_textWriter);
         }
 
-        public void Login(string Nick, string[] Channels, string Password)
+        public virtual void Login(string nick, string password)
         {
-            Nickname = Nick.ToLower();
-            this.Channels = Channels;
-
-            try
+            _messageHandler.WriteRawMessage(new List<string>
             {
-                GetMessageHandler().WriteRawMessage(new string[]
-                {
-                    $"USER {Nick}",
-                    $"PASS {Password}",
-                    $"NICK {Nick}"
-                });
+                $"USER {nick}",
+                $"PASS {password}",
+                $"NICK {nick}"
+            });
 
-                GetMessageHandler().WriteRawMessage(new string[]
-                {
-                    "CAP REQ :twitch.tv/membership",
-                    "CAP REQ :twitch.tv/commands",
-                    "CAP REQ :twitch.tv/tags"
-                });
-            }
-            catch (IOException ex)
+            _buffer = _textReader.ReadLine();
+
+            if(_buffer == null)
+                throw new Exception("Login failed");
+
+            if (_buffer.Split(' ')[1] != "001")
+                throw new Exception("Registration Failed. Welcome message expected");
+
+            _messageHandler.WriteRawMessage(new List<string>
             {
-                throw ex;
-            }
+                "CAP REQ :twitch.tv/membership",
+                "CAP REQ :twitch.tv/commands",
+                "CAP REQ :twitch.tv/tags"
+            });
         }
 
-        public bool Listen()
+        public void Listen(CancellationToken token)
         {
-            while ((Buffer = Input.ReadLine()) != null)
+            while ((_buffer = _textReader.ReadLine()) != null)
             {
-                if (Buffer != null)
-                {
+                token.ThrowIfCancellationRequested();
+
+                if (_buffer != null)
                     HandleEvents();
-
-                    if (Buffer[0] != ':')
-                        continue;
-
-                    if (Buffer.Split(' ')[1] == "001")
-                        foreach (string channel in Channels)
-                            Join(channel);
-                }
             }
-            return false;
         }
 
-        public void Join(string Channel)
-            => GetMessageHandler().WriteRawMessage($"JOIN {Channel}");
-
-        public void Disconnect(string Channel)
-            => GetMessageHandler().WriteRawMessage($"PART {Channel}");
-
-        public void DisconnectFromAll()
+        public void Pong(string ping)
         {
-            foreach (string channel in Channels)
-                Disconnect(channel);
+            _messageHandler.WriteRawMessage(ping.Replace("PING", "PONG"));
         }
 
-        public MessageHandler GetMessageHandler() 
-            => MessageHandler;
+        public void Join(string channel)
+        {
+            _channels.Add(channel);
+            _messageHandler.WriteRawMessage($"JOIN #{channel}");
+        }
+
+        public void Part(string channel)
+        {
+            _messageHandler.WriteRawMessage($"PART #{channel}");
+        }
+
+        public void PartFromAll()
+        {
+            foreach (var channel in _channels)
+                Part(channel);
+        }
+
+        public void Whisper(string user, string message)
+        {
+            Message("jtv", $"/w {user} {message}");
+        }
+
+        public void Message(string channel, string message)
+        {
+            _messageHandler.SendMessage(MessageType.Message, channel, message);
+        }
+
+        public virtual void Quit()
+        {
+            _messageHandler.WriteRawMessage("QUIT");
+        }
+
+        public void Dispose()
+        {
+            _textReader.Dispose();
+            _textWriter.Dispose();
+            _clientSocket.Dispose();
+        }
     }
 }

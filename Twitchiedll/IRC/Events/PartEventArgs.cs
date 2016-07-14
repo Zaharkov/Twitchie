@@ -5,10 +5,10 @@
         public string Username { get; internal set; }
         public string Channel { get; internal set; }
 
-        public PartEventArgs(string IrcMessage)
+        public PartEventArgs(string ircMessage)
         {
-            Username = IrcMessage.Split(' ')[0].Split(':')[1].Split('!')[0];
-            Channel = IrcMessage.Split(' ')[2];
+            Username = ircMessage.Split(' ')[0].Split(':')[1].Split('!')[0];
+            Channel = ircMessage.Split(' ')[2].TrimStart('#');
         }
     }
 }

@@ -7,22 +7,18 @@
         public string TargetChannel { get; internal set; }
         public bool IsStarting { get; internal set; }
 
-        public HostTargetEventArgs(string IrcMessage)
+        public HostTargetEventArgs(string ircMessage)
         {
-            string[] SplittedMsg = IrcMessage.Split(' ');
+            var splittedMsg = ircMessage.Split(' ');
 
             int viewers;
 
-            if (int.TryParse(SplittedMsg[4], out viewers))
-                Viewers = viewers;
-            else
-                Viewers = 0;
+            Viewers = int.TryParse(splittedMsg[4], out viewers) ? viewers : 0;
+            Channel = splittedMsg[2].TrimStart('#');
 
-            Channel = SplittedMsg[2];
-
-            if (SplittedMsg[3] != ":-")
+            if (splittedMsg[3] != ":-")
             {
-                TargetChannel = SplittedMsg[3].Replace(":", "");
+                TargetChannel = splittedMsg[3].Replace(":", "");
                 IsStarting = true;
             }
             else

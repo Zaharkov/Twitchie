@@ -2,7 +2,7 @@
 {
     public enum MessageType
     {
-        MESSAGE,
-        ACTION
+        Message,
+        Action
     }
 }

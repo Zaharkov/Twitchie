@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
 using Twitchiedll.IRC.Events;
 
 namespace Twitchiedll.IRC
@@ -6,7 +6,7 @@ namespace Twitchiedll.IRC
     public partial class Twitchie
     {
         public event RawMessageHandler OnRawMessage;
-        public event PRIVMessageHandler OnMessage;
+        public event PrivMessageHandler OnMessage;
         public event PingHandler OnPing;
         public event RoomStateHandler OnRoomState;
         public event ModeHandler OnMode;
@@ -17,122 +17,79 @@ namespace Twitchiedll.IRC
         public event SubscriberHandler OnSubscribe;
         public event HostTargetHandler OnHostTarget;
         public event ClearChatHandler OnClearChat;
-
-        public void HandleEvent(EventType Event)
-        {
-            switch (Event)
-            {
-                case EventType.ON_RAWMESSAGE:
-                    OnRawMessage?.Invoke(Buffer);
-                    break;
-
-                case EventType.ON_MESSAGE:
-                    OnMessage?.Invoke(new MessageEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_PING:
-                    OnPing?.Invoke(Buffer);
-                    break;
-
-                case EventType.ON_ROOMSTATE:
-                    OnRoomState?.Invoke(new RoomStateEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_MODE:
-                    OnMode?.Invoke(new ModeEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_NAMES_STARTING:
-                    NamesEventArgs.AddRange(Buffer.Split(':').Last().Split(' '));
-                    break;
-
-                case EventType.ON_NAMES_ENDING:
-                    OnNames?.Invoke(NamesEventArgs);
-                    break;
-
-                case EventType.ON_JOIN:
-                    OnJoin?.Invoke(new JoinEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_PART:
-                    OnPart?.Invoke(new PartEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_NOTICE:
-                    OnNotice?.Invoke(new NoticeEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_SUBSCRIBE:
-                    OnSubscribe?.Invoke(new SubscriberEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_HOSTTARGET:
-                    OnHostTarget?.Invoke(new HostTargetEventArgs(Buffer));
-                    break;
-
-                case EventType.ON_CLEARCHAT:
-                    OnClearChat?.Invoke(new ClearChatEventArgs(Buffer));
-                    break;
-            }
-        }
+        public event UserStateHandler OnUserState;
+        public event WhisperHandler OnWhisper;
 
         private void HandleEvents()
         {
-            HandleEvent(EventType.ON_RAWMESSAGE);
+            OnRawMessage?.Invoke(_buffer);
 
-            if (Is("PRIVMSG"))
+            if (_buffer.StartsWith("PING"))
             {
-                HandleEvent(EventType.ON_MESSAGE);
-
-                if (Buffer.StartsWith(":twitchnotify!twitchnotify@twitchnotify.tmi.twitch.tv"))
-                    HandleEvent(EventType.ON_SUBSCRIBE);
+                OnPing?.Invoke(_buffer);
+                return;
             }
-            else
+
+            var command =  _buffer.Split(':')[1].Split(' ')[1];
+
+            switch (command)
             {
-                ParseActions();
+                case "PRIVMSG":
+                {
+                    OnMessage?.Invoke(new MessageEventArgs(_buffer));
 
-                if (Is("PING"))
-                    HandleEvent(EventType.ON_PING);
+                    if (_buffer.StartsWith(":twitchnotify!twitchnotify@twitchnotify.tmi.twitch.tv"))
+                        OnSubscribe?.Invoke(new SubscriberEventArgs(_buffer));
 
-                if (Is("ROOMSTATE"))
-                    HandleEvent(EventType.ON_ROOMSTATE);
+                    break;
+                }
 
-                if (Is("NOTICE"))
-                    HandleEvent(EventType.ON_NOTICE);
+                case "ROOMSTATE":
+                    OnRoomState?.Invoke(new RoomStateEventArgs(_buffer));
+                    break;
 
-                if (Is("HOSTTARGET"))
-                    HandleEvent(EventType.ON_HOSTTARGET);
-
-                if (Is("CLEARCHAT"))
-                    HandleEvent(EventType.ON_CLEARCHAT);
-            }
-        }
-
-        public bool Is(string asd)
-            => Buffer.Split(' ').Any(a => a.Contains(asd));
-
-        private void ParseActions()
-        {
-            switch (Buffer.Split(' ')[1].Split(' ')[0])
-            {
                 case "MODE":
-                    HandleEvent(EventType.ON_MODE);
+                    OnMode?.Invoke(new ModeEventArgs(_buffer));
                     break;
 
                 case "353":
-                    HandleEvent(EventType.ON_NAMES_STARTING);
+                    _namesEventArgs.GetNames(_buffer);
                     break;
 
                 case "366":
-                    HandleEvent(EventType.ON_NAMES_ENDING);
+                    OnNames?.Invoke(_namesEventArgs);
                     break;
 
                 case "JOIN":
-                    HandleEvent(EventType.ON_JOIN);
+                    OnJoin?.Invoke(new JoinEventArgs(_buffer));
                     break;
 
                 case "PART":
-                    HandleEvent(EventType.ON_PART);
+                    OnPart?.Invoke(new PartEventArgs(_buffer));
+                    break;
+
+                case "NOTICE":
+                    OnNotice?.Invoke(new NoticeEventArgs(_buffer));
+                    break;
+
+                case "HOSTTARGET":
+                    OnHostTarget?.Invoke(new HostTargetEventArgs(_buffer));
+                    break;
+
+                case "CLEARCHAT":
+                    OnClearChat?.Invoke(new ClearChatEventArgs(_buffer));
+                    break;
+
+                case "WHISPER":
+                    OnWhisper?.Invoke(new MessageEventArgs(_buffer));
+                    break;
+
+                case "USERSTATE":
+                    OnUserState?.Invoke(new UserStateEventArgs(_buffer));
+                    break;
+
+                default:
+                    Debug.WriteLine(_buffer);
                     break;
             }
         }

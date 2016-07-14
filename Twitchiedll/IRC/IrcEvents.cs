@@ -2,11 +2,11 @@
 
 namespace Twitchiedll.IRC
 {
-    public delegate void RawMessageHandler(string RawMessage);
+    public delegate void RawMessageHandler(string rawMessage);
 
-    public delegate void PRIVMessageHandler(MessageEventArgs e);
+    public delegate void PrivMessageHandler(MessageEventArgs e);
 
-    public delegate void PingHandler(string RawMessage);
+    public delegate void PingHandler(string rawMessage);
 
     public delegate void RoomStateHandler(RoomStateEventArgs e);
 
@@ -25,4 +25,8 @@ namespace Twitchiedll.IRC
     public delegate void HostTargetHandler(HostTargetEventArgs e);
 
     public delegate void ClearChatHandler(ClearChatEventArgs e);
+
+    public delegate void UserStateHandler(UserStateEventArgs e);
+
+    public delegate void WhisperHandler(MessageEventArgs e);
 }

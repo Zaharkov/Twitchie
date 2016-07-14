@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Twitchiedll.IRC
@@ -12,35 +14,36 @@ namespace Twitchiedll.IRC
             Writer = writer;
         }
 
-        public void WriteRawMessage(string RawMessage)
+        public void WriteRawMessage(string rawMessage)
         {
-            Writer.Write(RawMessage + "\r\n");
+            Writer.WriteLine(rawMessage);
             Writer.Flush();
         }
 
-        public void WriteRawMessage(object[] RawMessage)
+        public void WriteRawMessage(List<string> rawMessage)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
 
-            foreach (var data in RawMessage)
-                builder.Append(data + "\r\n");
+            foreach (var data in rawMessage)
+                builder.AppendLine(data);
 
             WriteRawMessage(builder.ToString());
         }
 
-        public void SendMessage(MessageType MessageType, string Channel, string Message)
+        public void SendMessage(MessageType messageType, string channel, string message)
         {
-            switch (MessageType)
+            switch (messageType)
             {
-                case MessageType.ACTION:
-                    WriteRawMessage($"PRIVMSG {Channel} :/me {Message}");
+                case MessageType.Action:
+                    WriteRawMessage($"PRIVMSG #{channel} :/me {message}");
                     break;
 
-                case MessageType.MESSAGE:
-                    WriteRawMessage($"PRIVMSG {Channel} :{Message}");
+                case MessageType.Message:
+                    WriteRawMessage($"PRIVMSG #{channel} :{message}");
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(messageType), messageType, null);
             }
         }
-            
     }
 }

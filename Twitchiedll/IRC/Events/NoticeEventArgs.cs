@@ -6,47 +6,47 @@
         public string Message { get; internal set; }
         public Noticetype NoticeType { get; internal set; }
 
-        public NoticeEventArgs(string IrcMessage)
+        public NoticeEventArgs(string ircMessage)
         {
-            string[] SplittedMessage = IrcMessage.Split(' ');
+            var splittedMessage = ircMessage.Split(' ');
 
-            switch (SplittedMessage[0].Split('=')[1])
+            switch (splittedMessage[0].Split('=')[1])
             {
                 case "subs_on":
-                    NoticeType = Noticetype.SUBS_ON;
+                    NoticeType = Noticetype.SubsOn;
                     break;
 
                 case "subs_off":
-                    NoticeType = Noticetype.SUBS_OFF;
+                    NoticeType = Noticetype.SubsOff;
                     break;
 
                 case "slow_on":
-                    NoticeType = Noticetype.SLOW_ON;
+                    NoticeType = Noticetype.SlowOn;
                     break;
 
                 case "slow_off":
-                    NoticeType = Noticetype.SLOW_OFF;
+                    NoticeType = Noticetype.SlowOff;
                     break;
 
                 case "r9k_on":
-                    NoticeType = Noticetype.R9K_ON;
+                    NoticeType = Noticetype.R9KOn;
                     break;
 
                 case "r9k_off":
-                    NoticeType = Noticetype.R9K_OFF;
+                    NoticeType = Noticetype.R9KOff;
                     break;
 
                 case "host_on":
-                    NoticeType = Noticetype.HOST_ON;
+                    NoticeType = Noticetype.HostOn;
                     break;
 
                 case "host_off":
-                    NoticeType = Noticetype.HOST_OFF;
+                    NoticeType = Noticetype.HostOff;
                     break;
             }
 
-            Channel = SplittedMessage[3];
-            Message = IrcMessage.Split(':')[2];
+            Channel = splittedMessage[3].TrimStart('#');
+            Message = ircMessage.Split(':')[2];
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using Twitchiedll.IRC.Events;
 
 namespace Twitchiedll.IRC
@@ -11,16 +10,16 @@ namespace Twitchiedll.IRC
     {
         private string _buffer;
         private readonly List<string> _channels = new List<string>();
+        private readonly NamesEventArgs _namesEventArgs = new NamesEventArgs();
 
         private TextReader _textReader;
         private TextWriter _textWriter;
         private MessageHandler _messageHandler;
-
-        private readonly TcpClient _clientSocket = new TcpClient();
-        private readonly NamesEventArgs _namesEventArgs = new NamesEventArgs();
+        private TcpClient _clientSocket;
 
         public void Connect(string server, int port)
         {
+            _clientSocket = new TcpClient();
             _clientSocket.Connect(server, port);
 
             if (!_clientSocket.Connected)
@@ -58,12 +57,10 @@ namespace Twitchiedll.IRC
             });
         }
 
-        public void Listen(CancellationToken token)
+        public void Listen()
         {
             while ((_buffer = _textReader.ReadLine()) != null)
             {
-                token.ThrowIfCancellationRequested();
-
                 if (_buffer != null)
                     HandleEvents();
             }

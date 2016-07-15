@@ -54,7 +54,6 @@
     <Compile Include="IRC\EventType.cs" />
     <Compile Include="IRC\IrcEventHandlers.cs" />
     <Compile Include="IRC\IrcEvents.cs" />
-    <Compile Include="IRC\IrcState.cs" />
     <Compile Include="IRC\MessageHandler.cs" />
     <Compile Include="IRC\MessageType.cs" />
     <Compile Include="IRC\NoticeType.cs" />

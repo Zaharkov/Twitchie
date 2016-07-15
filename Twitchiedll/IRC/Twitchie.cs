@@ -13,7 +13,6 @@ namespace Twitchiedll.IRC
         private readonly NamesEventArgs _namesEventArgs = new NamesEventArgs();
 
         private TextReader _textReader;
-        private TextWriter _textWriter;
         private MessageHandler _messageHandler;
         private TcpClient _clientSocket;
 
@@ -28,18 +27,15 @@ namespace Twitchiedll.IRC
             var stream = _clientSocket.GetStream();
 
             _textReader = new StreamReader(stream);
-            _textWriter = new StreamWriter(stream);
-            _messageHandler = new MessageHandler(_textWriter);
+            var writer = new StreamWriter(stream);
+            _messageHandler = new MessageHandler(writer);
         }
 
         public virtual void Login(string nick, string password)
         {
-            _messageHandler.WriteRawMessage(new List<string>
-            {
-                $"USER {nick}",
-                $"PASS {password}",
-                $"NICK {nick}"
-            });
+            _messageHandler.WriteRawMessage($"USER {nick}", false, true);
+            _messageHandler.WriteRawMessage($"PASS {password}", false, true);
+            _messageHandler.WriteRawMessage($"NICK {nick}", false, true);
 
             _buffer = _textReader.ReadLine();
 
@@ -49,12 +45,9 @@ namespace Twitchiedll.IRC
             if (_buffer.Split(' ')[1] != "001")
                 throw new Exception("Registration Failed. Welcome message expected");
 
-            _messageHandler.WriteRawMessage(new List<string>
-            {
-                "CAP REQ :twitch.tv/membership",
-                "CAP REQ :twitch.tv/commands",
-                "CAP REQ :twitch.tv/tags"
-            });
+            _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/membership", false, true);
+            _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/commands", false, true);
+            _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/tags", false, true);
         }
 
         public void Listen()
@@ -100,13 +93,14 @@ namespace Twitchiedll.IRC
 
         public virtual void Quit()
         {
-            _messageHandler.WriteRawMessage("QUIT");
+            _messageHandler.TokenSource.Cancel();
+            _messageHandler.WriteRawMessage("QUIT", false, true);
         }
 
         public void Dispose()
         {
             _textReader.Dispose();
-            _textWriter.Dispose();
+            _messageHandler.Dispose();
             _clientSocket.Dispose();
         }
     }

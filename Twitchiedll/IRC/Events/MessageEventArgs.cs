@@ -1,4 +1,6 @@
-﻿namespace Twitchiedll.IRC.Events
+﻿using System;
+
+namespace Twitchiedll.IRC.Events
 {
     public class MessageEventArgs
     {
@@ -11,6 +13,7 @@
         public string Channel { get; internal set; }
         public string RawIrcMessage { get; internal set; }
         public string EmoteSet { get; internal set; }
+        public bool IsAction { get; internal set; }
 
         public MessageEventArgs(string ircString)
         {
@@ -119,12 +122,18 @@
 
             if (splitMes.Length > 4 && splitMes[4].StartsWith(":"))
             {
-                var message = splitMes[4].TrimStart(':');
+                var message = splitMes[4].TrimStart(':').Replace("\u0001", "");
+
+                if (message.Equals("ACTION") || message.Equals("/me"))
+                {
+                    message = string.Empty;
+                    IsAction = true;
+                }
 
                 if (splitMes.Length > 5)
                 {
                     for (var i = 5; i < splitMes.Length; i++)
-                        message += $" {splitMes[i]}";
+                        message += $"{(string.IsNullOrEmpty(message) ? "" : " ")}{splitMes[i].Replace("\u0001", "")}";
                 }
 
                 Message = message;

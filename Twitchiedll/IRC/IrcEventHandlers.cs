@@ -30,7 +30,8 @@ namespace Twitchiedll.IRC
                 return;
             }
 
-            var command =  _buffer.Split(':')[1].Split(' ')[1];
+            var commandIndex = _buffer.StartsWith("@") ? 2 : 1;
+            var command =  _buffer.Split(' ')[commandIndex];
 
             switch (command)
             {

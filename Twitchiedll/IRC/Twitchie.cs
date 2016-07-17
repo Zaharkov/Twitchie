@@ -16,6 +16,11 @@ namespace Twitchiedll.IRC
         private MessageHandler _messageHandler;
         private TcpClient _clientSocket;
 
+        public Twitchie()
+        {
+            OnPing += Pong;
+        }
+
         public void Connect(string server, int port)
         {
             _clientSocket = new TcpClient();
@@ -28,7 +33,7 @@ namespace Twitchiedll.IRC
 
             _textReader = new StreamReader(stream);
             var writer = new StreamWriter(stream);
-            _messageHandler = new MessageHandler(writer);
+            _messageHandler = new MessageHandler(writer); 
         }
 
         public virtual void Login(string nick, string password)

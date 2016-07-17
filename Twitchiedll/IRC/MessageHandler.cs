@@ -26,7 +26,8 @@ namespace Twitchiedll.IRC
         public readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
 
         private static readonly List<MessageContainer> MessageContainers = new List<MessageContainer>();
-        private static readonly object Lock = new object();
+        private static readonly object LockForCheck = new object();
+        private static readonly object LockForSend = new object();
         private readonly TextWriter _textWriter;
 
         public MessageHandler(TextWriter writer)
@@ -87,14 +88,17 @@ namespace Twitchiedll.IRC
 
         private void WriteMessage(MessageContainer messageContainer)
         {
-            messageContainer.Time = DateTime.Now;
-            _textWriter.WriteLine(messageContainer.Message);
-            _textWriter.Flush();
+            lock (LockForSend)
+            {
+                messageContainer.Time = DateTime.Now;
+                _textWriter.WriteLine(messageContainer.Message);
+                _textWriter.Flush();
+            }
         }
 
         private static bool IsCanSendMessage(MessageContainer messageContainer, CancellationToken token, bool needWait, ref bool added)
         {
-            lock (Lock)
+            lock (LockForCheck)
             {
                 if (!added)
                 {

@@ -104,7 +104,6 @@ namespace Twitchiedll.IRC
         {
             lock (LockForSend)
             {
-                Debug.WriteLine("send whisper");
                 messageContainer.Time = DateTime.Now;
                 _textWriter.WriteLine(messageContainer.Message);
                 _textWriter.Flush();
@@ -178,7 +177,6 @@ namespace Twitchiedll.IRC
                     else
                         WhisperContainers.Remove(message);
                 }
-                Debug.WriteLine($"countSecond: {countSecond}, countMinute: {countMinute}");
                 return countSecond < (int)WhisperLimit.PerSecond && countMinute < (int)WhisperLimit.PerMinute;
             }
         }

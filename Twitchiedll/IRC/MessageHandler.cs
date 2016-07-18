@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Twitchiedll.IRC.Limits;
 
 namespace Twitchiedll.IRC
 {
@@ -17,16 +19,18 @@ namespace Twitchiedll.IRC
         Since 50 + 1 = 51 and 51 > 20, you will have exceeded the limit for non-modded channels
         and be locked out globally (by IP) for 2 hours.
 
-        Whispers don't impact your channel send limit
+        Whispers don't impact your channel send limit, but have own limits
+        whisper_limit_per_sec = 3
+        whisper_limit_per_min = 100
         */
-        public const int SimpleUserLimit = 20;
-        public const int ModeratorUserLimit = 100;
-        public static int GlobalMessageLimit = SimpleUserLimit;
+        public static MessageLimit GlobalMessageLimit = MessageLimit.Viewer;
 
         public readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
 
         private static readonly List<MessageContainer> MessageContainers = new List<MessageContainer>();
-        private static readonly object LockForCheck = new object();
+        private static readonly List<MessageContainer> WhisperContainers = new List<MessageContainer>();
+        private static readonly object LockForCheckMessage = new object();
+        private static readonly object LockForCheckWhisper = new object();
         private static readonly object LockForSend = new object();
         private readonly TextWriter _textWriter;
 
@@ -41,7 +45,17 @@ namespace Twitchiedll.IRC
 
             if (whisper)
             {
-                WriteMessage(container);
+                Task.Run(() =>
+                {
+                    var added = false;
+                    while (!IsCanSendWhisper(container, TokenSource.Token, ref added))
+                        Thread.Sleep(1000);
+
+                    TokenSource.Token.ThrowIfCancellationRequested();
+
+                    WriteMessage(container);
+                }, TokenSource.Token);
+
                 return;
             }
 
@@ -90,6 +104,7 @@ namespace Twitchiedll.IRC
         {
             lock (LockForSend)
             {
+                Debug.WriteLine("send whisper");
                 messageContainer.Time = DateTime.Now;
                 _textWriter.WriteLine(messageContainer.Message);
                 _textWriter.Flush();
@@ -98,7 +113,7 @@ namespace Twitchiedll.IRC
 
         private static bool IsCanSendMessage(MessageContainer messageContainer, CancellationToken token, bool needWait, ref bool added)
         {
-            lock (LockForCheck)
+            lock (LockForCheckMessage)
             {
                 if (!added)
                 {
@@ -112,19 +127,59 @@ namespace Twitchiedll.IRC
                     token.ThrowIfCancellationRequested();
                 }
 
-                var timeNow = DateTime.Now.AddSeconds(-30);
+                var timeCheck = DateTime.Now.AddSeconds(-30);
                 var count = 0;
                 var copy = MessageContainers.ToList();
 
                 foreach (var message in copy)
                 {
-                    if (message.Time > timeNow)
+                    if (message.Time > timeCheck)
                         count++;
                     else
                         MessageContainers.Remove(message);
                 }
 
-                return count < GlobalMessageLimit;
+                return count < (int)GlobalMessageLimit;
+            }
+        }
+
+        private static bool IsCanSendWhisper(MessageContainer messageContainer, CancellationToken token, ref bool added)
+        {
+            lock (LockForCheckWhisper)
+            {
+                if (!added)
+                {
+                    WhisperContainers.Add(messageContainer);
+                    added = true;
+                }
+
+                if (token.IsCancellationRequested)
+                {
+                    WhisperContainers.Remove(messageContainer);
+                    token.ThrowIfCancellationRequested();
+                }
+
+                var timeCheckSecond = DateTime.Now.AddSeconds(-1);
+                var timeCheckMinute = DateTime.Now.AddSeconds(-60);
+                var countSecond = 0;
+                var countMinute = 0;
+                var copy = WhisperContainers.ToList();
+
+                foreach (var message in copy)
+                {
+                    if (message.Time > timeCheckSecond)
+                        countSecond++;
+                }
+
+                foreach (var message in copy)
+                {
+                    if (message.Time > timeCheckMinute)
+                        countMinute++;
+                    else
+                        WhisperContainers.Remove(message);
+                }
+                Debug.WriteLine($"countSecond: {countSecond}, countMinute: {countMinute}");
+                return countSecond < (int)WhisperLimit.PerSecond && countMinute < (int)WhisperLimit.PerMinute;
             }
         }
 

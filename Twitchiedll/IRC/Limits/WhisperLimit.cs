@@ -2,7 +2,7 @@
 {
     public enum WhisperLimit
     {
-        PerSecond = 3,
-        PerMinute = 100
+        PerSecond = 2,
+        PerMinute = 80
     }
 }

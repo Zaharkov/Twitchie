@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using Twitchiedll.IRC.Events;
@@ -113,6 +112,21 @@ namespace Twitchiedll.IRC
         public void Message(string channel, string message)
         {
             _messageHandler.SendMessage(MessageType.Message, channel, message);
+        }
+
+        public void Action(string channel, string message)
+        {
+            _messageHandler.SendMessage(MessageType.Action, channel, message);
+        }
+
+        public void Timeout(string channel, string user, int timeout)
+        {
+            _messageHandler.SendMessage(MessageType.Message, channel, $"/timeout {user} {timeout}");
+        }
+
+        public void Ban(string channel, string user)
+        {
+            _messageHandler.SendMessage(MessageType.Message, channel, $"/ban {user}");
         }
 
         public virtual void Quit()

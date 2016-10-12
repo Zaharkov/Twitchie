@@ -18,7 +18,7 @@ namespace Twitchiedll.IRC
         Since 50 + 1 = 51 and 51 > 20, you will have exceeded the limit for non-modded channels
         and be locked out globally (by IP) for 2 hours.
 
-        Whispers don't impact your channel send limit, but have own limits
+        Whispers don't impact your channel send limit, but have own limits (don't know whats limits..gotted by tests)
         whisper_limit_per_sec = 3
         whisper_limit_per_min = 100
         */

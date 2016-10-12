@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using Twitchiedll.IRC.Events;
+using Twitchiedll.IRC.Interfaces;
 
 namespace Twitchiedll.IRC
 {
@@ -16,9 +18,16 @@ namespace Twitchiedll.IRC
         private MessageHandler _messageHandler;
         private TcpClient _clientSocket;
 
+        protected ILogger Logger;
+
         public Twitchie()
         {
             OnPing += Pong;
+        }
+
+        private void LogException(string message, Exception e)
+        {
+            Logger?.LogException(message, e);
         }
 
         public void Connect(string server, int port)
@@ -60,7 +69,17 @@ namespace Twitchiedll.IRC
             while ((_buffer = _textReader.ReadLine()) != null)
             {
                 if (_buffer != null)
-                    HandleEvents();
+                {
+                    try
+                    {
+                        HandleEvents();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogException("Failed handle events", ex);
+                        throw;
+                    }
+                }
             }
         }
 

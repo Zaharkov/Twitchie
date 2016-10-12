@@ -52,6 +52,7 @@
     <Compile Include="IRC\Events\RoomStateEventArgs.cs" />
     <Compile Include="IRC\Events\SubscriberEventArgs.cs" />
     <Compile Include="IRC\EventType.cs" />
+    <Compile Include="IRC\Interfaces\ILogger.cs" />
     <Compile Include="IRC\IrcEventHandlers.cs" />
     <Compile Include="IRC\IrcEvents.cs" />
     <Compile Include="IRC\Limits\WhisperLimit.cs" />

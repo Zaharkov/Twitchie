@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Twitchiedll.IRC.Events
+﻿namespace Twitchiedll.IRC.Events
 {
     public class MessageEventArgs
     {

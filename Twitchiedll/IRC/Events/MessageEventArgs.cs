@@ -1,4 +1,6 @@
-﻿namespace Twitchiedll.IRC.Events
+﻿using Twitchiedll.IRC.Enums;
+
+namespace Twitchiedll.IRC.Events
 {
     public class MessageEventArgs
     {
@@ -122,7 +124,7 @@
             {
                 var message = splitMes[4].TrimStart(':').Replace("\u0001", "");
 
-                if (message.Equals("ACTION") || message.Equals("/me"))
+                if (message.Equals("ACTION") || message.Equals(TwitchConstName.Action))
                 {
                     message = string.Empty;
                     IsAction = true;

@@ -1,4 +1,6 @@
-﻿namespace Twitchiedll.IRC.Events
+﻿using Twitchiedll.IRC.Enums;
+
+namespace Twitchiedll.IRC.Events
 {
     public class NoticeEventArgs
     {

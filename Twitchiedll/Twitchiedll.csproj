@@ -51,18 +51,19 @@
     <Compile Include="IRC\Events\PartEventArgs.cs" />
     <Compile Include="IRC\Events\RoomStateEventArgs.cs" />
     <Compile Include="IRC\Events\SubscriberEventArgs.cs" />
-    <Compile Include="IRC\EventType.cs" />
+    <Compile Include="IRC\Enums\EventType.cs" />
     <Compile Include="IRC\Interfaces\ILogger.cs" />
     <Compile Include="IRC\IrcEventHandlers.cs" />
     <Compile Include="IRC\IrcEvents.cs" />
+    <Compile Include="IRC\Enums\IrcState.cs" />
     <Compile Include="IRC\Limits\WhisperLimit.cs" />
     <Compile Include="IRC\Limits\MessageLimit.cs" />
     <Compile Include="IRC\MessageContainer.cs" />
     <Compile Include="IRC\MessageHandler.cs" />
-    <Compile Include="IRC\MessageType.cs" />
-    <Compile Include="IRC\NoticeType.cs" />
+    <Compile Include="IRC\Enums\MessageType.cs" />
+    <Compile Include="IRC\Enums\NoticeType.cs" />
     <Compile Include="IRC\Twitchie.cs" />
-    <Compile Include="IRC\UserType.cs" />
+    <Compile Include="IRC\Enums\UserType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

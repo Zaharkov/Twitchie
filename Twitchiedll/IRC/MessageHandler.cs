@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Twitchiedll.IRC.Enums;
 using Twitchiedll.IRC.Limits;
 
 namespace Twitchiedll.IRC
@@ -88,7 +89,7 @@ namespace Twitchiedll.IRC
             switch (messageType)
             {
                 case MessageType.Action:
-                    WriteRawMessage($"PRIVMSG #{channel} :/me {message}", whisper);
+                    WriteRawMessage($"PRIVMSG #{channel} :{TwitchConstName.Action} {message}", whisper);
                     break;
 
                 case MessageType.Message:

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using Twitchiedll.IRC.Enums;
 using Twitchiedll.IRC.Events;
 using Twitchiedll.IRC.Interfaces;
 
@@ -12,6 +13,7 @@ namespace Twitchiedll.IRC
         private string _buffer;
         private readonly List<string> _channels = new List<string>();
         private readonly NamesEventArgs _namesEventArgs = new NamesEventArgs();
+        public IrcState State { get; private set; }
 
         private TextReader _textReader;
         private MessageHandler _messageHandler;
@@ -31,6 +33,7 @@ namespace Twitchiedll.IRC
 
         public void Connect(string server, int port)
         {
+            State = IrcState.Connecting;
             _clientSocket = new TcpClient();
             _clientSocket.Connect(server, port);
 
@@ -42,10 +45,12 @@ namespace Twitchiedll.IRC
             _textReader = new StreamReader(stream);
             var writer = new StreamWriter(stream);
             _messageHandler = new MessageHandler(writer); 
+            State = IrcState.Connected;
         }
 
         public virtual void Login(string nick, string password)
         {
+            State = IrcState.Registering;
             _messageHandler.WriteRawMessage($"USER {nick}", false, true);
             _messageHandler.WriteRawMessage($"PASS {password}", false, true);
             _messageHandler.WriteRawMessage($"NICK {nick}", false, true);
@@ -61,12 +66,25 @@ namespace Twitchiedll.IRC
             _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/membership", false, true);
             _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/commands", false, true);
             _messageHandler.WriteRawMessage("CAP REQ :twitch.tv/tags", false, true);
+            State = IrcState.Registered;
         }
 
         public void Listen()
         {
-            while ((_buffer = _textReader.ReadLine()) != null)
+            while (State != IrcState.Closed && State != IrcState.Closing)
             {
+                try
+                {
+                    _buffer = _textReader.ReadLine();
+                }
+                catch (IOException)
+                {
+                    if (State != IrcState.Closed && State != IrcState.Closing)
+                        throw;
+
+                    break;
+                }
+                
                 if (_buffer != null)
                 {
                     try
@@ -129,17 +147,19 @@ namespace Twitchiedll.IRC
             _messageHandler.SendMessage(MessageType.Message, channel, $"/ban {user}");
         }
 
-        public virtual void Quit()
-        {
-            _messageHandler.TokenSource.Cancel();
-            _messageHandler.WriteRawMessage("QUIT", false, true);
-        }
-
         public void Dispose()
         {
+            if(State == IrcState.Closed)
+                return;
+
+            if (State == IrcState.Registered)
+                _messageHandler.WriteRawMessage("QUIT", false, true);
+
+            State = IrcState.Closing;
             _textReader.Dispose();
             _messageHandler.Dispose();
             _clientSocket.Dispose();
+            State = IrcState.Closed;
         }
     }
 }

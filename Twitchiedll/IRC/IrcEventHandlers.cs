@@ -37,11 +37,13 @@ namespace Twitchiedll.IRC
             {
                 case "PRIVMSG":
                 {
-                    OnMessage?.Invoke(new MessageEventArgs(_buffer));
-
                     if (_buffer.StartsWith(":twitchnotify!twitchnotify@twitchnotify.tmi.twitch.tv"))
+                    {
                         OnSubscribe?.Invoke(new SubscriberEventArgs(_buffer));
+                        break;
+                    }
 
+                    OnMessage?.Invoke(new MessageEventArgs(_buffer));
                     break;
                 }
 

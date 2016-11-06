@@ -17,7 +17,7 @@
             Message = ircMessage.Split(':')[2];
 
             if (splittedMessage[4].Equals("just") && splittedMessage[5].Equals("subscribed!"))
-                Months = 0;
+                Months = 1;
             else if (splittedMessage[4].Equals("subscribed") && splittedMessage[6].Equals("for"))
                 if (int.TryParse(splittedMessage[7], out months))
                     Months = months;

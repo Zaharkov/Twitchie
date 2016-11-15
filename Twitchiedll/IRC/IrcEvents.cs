@@ -29,4 +29,6 @@ namespace Twitchiedll.IRC
     public delegate void UserStateHandler(UserStateEventArgs e);
 
     public delegate void WhisperHandler(MessageEventArgs e);
+
+    public delegate void UserNoticeHandler(UserNoticeEventArgs e);
 }

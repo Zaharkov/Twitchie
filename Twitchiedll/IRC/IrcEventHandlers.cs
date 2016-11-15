@@ -19,6 +19,7 @@ namespace Twitchiedll.IRC
         public event ClearChatHandler OnClearChat;
         public event UserStateHandler OnUserState;
         public event WhisperHandler OnWhisper;
+        public event UserNoticeHandler OnUserNotice;
 
         private void HandleEvents()
         {
@@ -89,6 +90,10 @@ namespace Twitchiedll.IRC
 
                 case "USERSTATE":
                     OnUserState?.Invoke(new UserStateEventArgs(_buffer));
+                    break;
+
+                case "USERNOTICE":
+                    OnUserNotice?.Invoke(new UserNoticeEventArgs(_buffer));
                     break;
 
                 default:

@@ -69,7 +69,7 @@ namespace Twitchiedll.IRC
             State = IrcState.Registered;
         }
 
-        public void Listen()
+        public void Listen(bool throwOnHandleEventError = false)
         {
             while (State != IrcState.Closed && State != IrcState.Closing)
             {
@@ -93,8 +93,10 @@ namespace Twitchiedll.IRC
                     }
                     catch (Exception ex)
                     {
-                        LogException("Failed handle events", ex);
-                        throw;
+                        LogException($"Failed handle event: {_buffer}", ex);
+
+                        if(throwOnHandleEventError)
+                            throw;
                     }
                 }
             }

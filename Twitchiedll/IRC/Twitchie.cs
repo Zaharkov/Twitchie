@@ -31,12 +31,23 @@ namespace Twitchiedll.IRC
             Logger?.LogException(message, e);
         }
 
+        public void Connect(TcpClient client)
+        {
+            _clientSocket = client;
+            InitStreams();
+        }
+
         public void Connect(string server, int port)
         {
             State = IrcState.Connecting;
             _clientSocket = new TcpClient();
             _clientSocket.Connect(server, port);
 
+            InitStreams();
+        }
+
+        private void InitStreams()
+        {
             if (!_clientSocket.Connected)
                 throw new Exception("Connection failed");
 
@@ -44,7 +55,7 @@ namespace Twitchiedll.IRC
 
             _textReader = new StreamReader(stream);
             var writer = new StreamWriter(stream);
-            _messageHandler = new MessageHandler(writer); 
+            _messageHandler = new MessageHandler(writer);
             State = IrcState.Connected;
         }
 
